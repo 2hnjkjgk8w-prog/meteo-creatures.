@@ -35,7 +35,16 @@ button{background:#c5b8ff;color:#17152c;font-weight:700}
 button:active{opacity:.75}
 </style>
 </head>
-<body>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .catch(error => console.error("Service worker :", error));
+  });
+}
+</script>
+ <body>
 <header>
 <div class="creature">🌙 ☁️</div>
 <h1>Météo des petites créatures</h1>
