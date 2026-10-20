@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10152d">
+<title>Météo des petites créatures</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#10152d;color:#f4f1ff;
+font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+padding:22px 16px;max-width:600px;margin:auto}
+header{text-align:center;padding:18px 0}
+h1{font-size:27px;margin:8px 0}
+p{color:#b9bfdc}
+.panel{background:#1b2242;border:1px solid #343d65;
+border-radius:22px;padding:20px;margin:14px 0}
+input,button{font:inherit;border-radius:12px;padding:12px;
+border:1px solid #48547d}
+input{background:#111831;color:white;min-width:0;width:100%}
+button{background:#c5b8ff;color:#17152c;font-weight:700}
+.search{display:flex;gap:8px}
+.search button{flex-shrink:0}
+.temp{font-size:58px;font-weight:750;margin:12px 0}
+.creature{font-size:64px}
+.muted{color:#b9bfdc;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.metric{background:#111831;padding:13px;border-radius:15px}
+.metric strong{display:block;font-size:20px;margin-top:7px}
+.days{display:flex;flex-direction:column;gap:12px}
+.day{display:flex;justify-content:space-between;gap:8px}
+button:active{opacity:.75}
+</style>
+</head>
+<body>
+<header>
+<div class="creature">🌙 ☁️</div>
+<h1>Météo des petites créatures</h1>
+<p>Les secrets du ciel, chaque jour.</p>
+</header>
+
+<section class="panel">
+<form id="searchForm" class="search">
+<input id="city" placeholder="Rechercher une ville…" aria-label="Ville">
+<button type="submit">Chercher</button>
+</form>
+<p><button id="gps" type="button">📍 Utiliser ma position</button></p>
+<p id="status" role="status">Choisis une ville pour commencer.</p>
+</section>
+
+<section class="panel">
+<div id="place">Ton ciel t'attend</div>
+<div class="creature" id="sky">🔮</div>
+<div class="temp" id="temp">--°</div>
+<div id="description">Le ciel n'a pas encore révélé ses secrets.</div>
+<p class="muted" id="updated"></p>
+<div class="grid">
+<div class="metric">🌡️ Ressenti<strong id="feels">--°</strong></div>
+<div class="metric">🌧️ Risque de pluie<strong id="rain">-- %</strong></div>
+<div class="metric">💧 Précipitations<strong id="amount">-- mm</strong></div>
+<div class="metric">💨 Vent / rafales<strong id="wind">-- / -- km/h</strong></div>
+</div>
+</section>
+
+<section class="panel">
+<h2>✨ Les prochaines heures</h2>
+<div id="hours" class="days">En attente des prévisions…</div>
+</section>
+
+<section class="panel">
+<h2>🔮 Les 7 prochains jours</h2>
+<div id="week" class="days">En attente des prévisions…</div>
+</section>
+
+<script>
+const $ = id => document.getElementById(id);
+const icons = ["☀️","🌤️","☁️","🌧️","❄️","🌫️","⛈️"];
+
+function weatherIcon(code){
+ if(code===0)return "☀️";
+ if(code<=2)return "🌤️";
+ if(code===3)return "☁️";
+ if(code===45||code===48)return "🌫️";
+ if(code>=51&&code<=67)return "🌧️";
+ if(code>=71&&code<=77)return "❄️";
+ if(code>=80&&code<=82)return "🌦️";
+ if(code>=85&&code<=86)return "🌨️";
+ if(code>=95)return "⛈️";
+ return icons[2];
+}
+function weatherText(code){
+ if(code===0)return "Ciel dégagé";
+ if(code<=2)return "Éclaircies";
+ if(code===3)return "Ciel couvert";
+ if(code===45||code===48)return "Brouillard";
+ if(code>=51&&code<=67)return "Pluie";
+ if(code>=71&&code<=77)return "Neige";
+ if(code>=80&&code<=82)return "Averses";
+ if(code>=85&&code<=86)return "Averses de neige";
+ if(code>=95)return "Orage";
+ return "Ciel mystérieux";
+}
+function showStatus(text){$("status").textContent=text}
+
+async function loadWeather(lat,lon,name){
+ showStatus("🌌 Interrogation des nuages…");
+ try{
+  const url="https://api.open-meteo.com/v1/forecast"+
+  "?latitude="+lat+"&longitude="+lon+
+  "&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_gusts_10m"+
+  "&hourly=temperature_2m,precipitation_probability,precipitation,weather_code"+
+  "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max"+
+  "&timezone=auto&forecast_days=7";
+  const response=await fetch(url);
+  if(!response.ok)throw Error("Prévisions indisponibles");
+  const d=await response.json();
+  const c=d.current;
+  $("place").textContent="📍 "+name;
+  $("sky").textContent=weatherIcon(c.weather_code);
+  $("temp").textContent=Math.round(c.temperature_2m)+"°C";
+  $("description").textContent=weatherText(c.weather_code);
+  $("feels").textContent=Math.round(c.apparent_temperature)+"°C";
+  $("rain").textContent=(d.hourly.precipitation_probability[0]??0)+" %";
+  $("amount").textContent=c.precipitation+" mm";
+  $("wind").textContent=Math.round(c.wind_speed_10m)+" / "+
+    Math.round(c.wind_gusts_10m)+" km/h";
+  $("updated").textContent="Données météo : "+c.time.replace("T"," ");
+  const start=d.hourly.time.findIndex(t=>t>=c.time);
+  $("hours").innerHTML=d.hourly.time.slice(start,start+12).map((t,i)=>{
+   const n=start+i;
+   return `<div class="day"><span>${t.slice(11,16)} ${weatherIcon(d.hourly.weather_code[n])}</span><strong>${Math.round(d.hourly.temperature_2m[n])}°C</strong><span>${d.hourly.precipitation_probability[n]??0}% 🌧️</span></div>`;
+  }).join("");
+  $("week").innerHTML=d.daily.time.map((t,i)=>{
+   const date=new Date(t+"T12:00:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric"});
+   return `<div class="day"><span>${date} ${weatherIcon(d.daily.weather_code[i])}</span><strong>${Math.round(d.daily.temperature_2m_max[i])}° / ${Math.round(d.daily.temperature_2m_min[i])}°</strong><span>${d.daily.precipitation_probability_max[i]??0}%</span></div>`;
+  }).join("");
+  localStorage.setItem("meteo-cache",JSON.stringify({lat,lon,name,d,saved:Date.now()}));
+  showStatus("✨ Les prévisions sont à jour.");
+ }catch(e){
+  const cached=localStorage.getItem("meteo-cache");
+  if(cached){
+   const old=JSON.parse(cached);
+   showStatus("📜 Connexion indisponible. Dernière consultation : "+
+    new Date(old.saved).toLocaleString("fr-FR")+
+    ". Reconnecte-toi pour actualiser les données.");
+  }else showStatus("Impossible de charger la météo. Vérifie ta connexion.");
+ }
+}
+async function searchCity(city){
+ if(!city.trim())return;
+ showStatus("🔎 Recherche de cette ville…");
+ try{
+  const url="https://geocoding-api.open-meteo.com/v1/search?name="+
+   encodeURIComponent(city)+"&count=1&language=fr&format=json";
+  const r=await fetch(url);
+  const data=await r.json();
+  if(!data.results?.length)throw Error("Ville introuvable");
+  const p=data.results[0];
+  await loadWeather(p.latitude,p.longitude,
+   p.name+(p.country?", "+p.country:""));
+ }catch(e){showStatus("Ville introuvable ou connexion indisponible.")}
+}
+$("searchForm").addEventListener("submit",e=>{
+ e.preventDefault();searchCity($("city").value);
+});
+$("gps").addEventListener("click",()=>{
+ if(!navigator.geolocation){
+  showStatus("GPS indisponible sur ce navigateur.");return;
+ }
+ showStatus("📍 Recherche de ta position…");
+ navigator.geolocation.getCurrentPosition(
+  p=>loadWeather(p.coords.latitude,p.coords.longitude,"Ma position"),
+  ()=>showStatus("Position refusée ou indisponible. Recherche une ville."),
+  {enableHighAccuracy:false,timeout:12000}
+ );
+});
+const saved=localStorage.getItem("meteo-cache");
+if(saved){
+ try{
+  const old=JSON.parse(saved);
+  showStatus("Dernière ville consultée : "+old.name+". Actualisation…");
+  loadWeather(old.lat,old.lon,old.name);
+ }catch(e){}
+}
+</script>
+</body>
+</html>
