@@ -16,21 +16,26 @@
 
 body {
   margin: 0 auto;
+  padding: 20px 15px;
+  max-width: 650px;
   background: #10152d;
   color: #f4f1ff;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  padding: 22px 16px;
-  max-width: 600px;
 }
 
 header {
   text-align: center;
-  padding: 18px 0;
+  padding: 15px 0;
 }
 
 h1 {
   font-size: 27px;
-  margin: 8px 0;
+  margin: 10px 0;
+}
+
+h2 {
+  font-size: 20px;
+  margin-top: 0;
 }
 
 p {
@@ -40,35 +45,40 @@ p {
 .panel {
   background: #1b2242;
   border: 1px solid #343d65;
-  border-radius: 22px;
-  padding: 20px;
+  border-radius: 20px;
+  padding: 18px;
   margin: 14px 0;
+}
+
+.search {
+  display: flex;
+  gap: 8px;
 }
 
 input, button {
   font: inherit;
-  border-radius: 12px;
   padding: 12px;
-  border: 1px solid #48547d;
+  border-radius: 12px;
 }
 
 input {
+  width: 100%;
+  min-width: 0;
   background: #111831;
   color: white;
-  min-width: 0;
-  width: 100%;
+  border: 1px solid #48547d;
 }
 
 button {
+  border: 1px solid #48547d;
   background: #c5b8ff;
   color: #17152c;
   font-weight: 700;
   cursor: pointer;
 }
 
-.search {
-  display: flex;
-  gap: 8px;
+button:disabled {
+  opacity: .6;
 }
 
 .search button {
@@ -79,31 +89,32 @@ button {
   width: 100%;
 }
 
-.temp {
-  font-size: 58px;
-  font-weight: 750;
-  margin: 12px 0;
+.creature {
+  font-size: 55px;
 }
 
-.creature {
-  font-size: 64px;
+.temp {
+  font-size: 58px;
+  font-weight: 800;
+  margin: 10px 0;
 }
 
 .muted {
   color: #b9bfdc;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  margin-top: 18px;
 }
 
 .metric {
   background: #111831;
+  border-radius: 14px;
   padding: 13px;
-  border-radius: 15px;
 }
 
 .metric strong {
@@ -115,14 +126,99 @@ button {
 .days {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 9px;
 }
 
 .day {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
   align-items: center;
-  gap: 8px;
+  padding: 12px 9px;
+  background: #111831;
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+
+.day.selected {
+  border-color: #c5b8ff;
+  background: #292d55;
+}
+
+.day button {
+  background: transparent;
+  border: 0;
+  padding: 5px 0;
+  color: #f4f1ff;
+  text-align: left;
+  font-weight: 500;
+}
+
+.day button:focus-visible,
+button:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+.day .temps {
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.day .rain {
+  font-size: 13px;
+  color: #b9d8ff;
+  white-space: nowrap;
+}
+
+.chart-wrap {
+  margin-top: 18px;
+  padding: 12px;
+  border-radius: 15px;
+  background: #111831;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 13px;
+  color: #d5d9f2;
+  margin-bottom: 8px;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 18px;
+  height: 3px;
+  vertical-align: middle;
+  margin-right: 5px;
+  border-radius: 3px;
+}
+
+#chart {
+  width: 100%;
+  display: block;
+  height: auto;
+  touch-action: pan-y;
+}
+
+.chart-help {
+  font-size: 12px;
+  color: #aeb8dc;
+  margin: 6px 0 0;
+}
+
+.detail {
+  margin-top: 15px;
+  padding: 15px;
+  background: #111831;
+  border-radius: 15px;
+}
+
+.detail-title {
+  font-size: 18px;
+  font-weight: 750;
 }
 
 .signature {
@@ -133,16 +229,24 @@ button {
   font-size: 16px;
   font-style: italic;
   border-top: 1px solid #343d65;
-  letter-spacing: 0.4px;
 }
 
-button:active {
-  opacity: 0.75;
-}
+@media (max-width: 380px) {
+  body {
+    padding: 12px 10px;
+  }
 
-button:disabled {
-  opacity: 0.6;
-  cursor: wait;
+  .panel {
+    padding: 13px;
+  }
+
+  .day {
+    gap: 5px;
+  }
+
+  .day .rain {
+    font-size: 12px;
+  }
 }
 </style>
 </head>
@@ -152,24 +256,16 @@ button:disabled {
 <header>
   <div class="creature">🌙 ☁️</div>
   <h1>Météo des petites créatures</h1>
-  <p>Coucou ma petite louve, je t'aime 💜.</p>
+  <p>Les secrets du ciel, chaque jour.</p>
 </header>
 
 <section class="panel">
   <form id="searchForm" class="search">
-    <input
-      id="city"
-      placeholder="Rechercher une ville…"
-      aria-label="Ville"
-      autocomplete="off"
-    >
+    <input id="city" placeholder="Rechercher une ville…" aria-label="Ville">
     <button type="submit">Chercher</button>
   </form>
 
-  <p>
-    <button id="gps" type="button">📍 Ma position</button>
-  </p>
-
+  <p><button id="gps" type="button">📍 Ma position</button></p>
   <p id="status" role="status" aria-live="polite">
     Choisis une ville ou utilise ta position.
   </p>
@@ -179,29 +275,20 @@ button:disabled {
   <div id="place">Ton ciel t'attend</div>
   <div class="creature" id="sky">🔮</div>
   <div class="temp" id="temp">--°</div>
-  <div id="description">
-    Le ciel n'a pas encore révélé ses secrets.
-  </div>
+  <div id="description">Le ciel n'a pas encore révélé ses secrets.</div>
   <p class="muted" id="updated"></p>
 
   <div class="grid">
-    <div class="metric">
-      🌡️ Ressenti
+    <div class="metric">🌡️ Ressenti
       <strong id="feels">--°</strong>
     </div>
-
-    <div class="metric">
-      🌧️ Risque de pluie
+    <div class="metric">🌧️ Risque de pluie
       <strong id="rain">-- %</strong>
     </div>
-
-    <div class="metric">
-      💧 Précipitations
+    <div class="metric">💧 Précipitations
       <strong id="amount">-- mm</strong>
     </div>
-
-    <div class="metric">
-      💨 Vent / rafales
+    <div class="metric">💨 Vent / rafales
       <strong id="wind">-- / -- km/h</strong>
     </div>
   </div>
@@ -214,7 +301,27 @@ button:disabled {
 
 <section class="panel">
   <h2>🔮 Les 7 prochains jours</h2>
+  <p class="muted">Appuie sur un jour pour voir ses détails et sa position sur le graphique.</p>
+
   <div id="week" class="days">En attente des prévisions…</div>
+
+  <div class="chart-wrap">
+    <div class="chart-legend">
+      <span><i class="legend-line" style="background:#ffbd69"></i>Maximum</span>
+      <span><i class="legend-line" style="background:#91caff"></i>Minimum</span>
+    </div>
+    <svg id="chart" viewBox="0 0 340 220" role="img"
+      aria-label="Graphique des températures minimales et maximales sur sept jours">
+      <text x="170" y="110" fill="#b9bfdc" text-anchor="middle">
+        Le graphique apparaîtra ici
+      </text>
+    </svg>
+    <p class="chart-help">Les températures sont en °C. Les points correspondent aux jours prévus.</p>
+  </div>
+
+  <div id="dayDetail" class="detail" aria-live="polite">
+    Choisis un jour pour afficher ses détails.
+  </div>
 </section>
 
 <footer class="signature">
@@ -224,7 +331,8 @@ button:disabled {
 <script>
 const $ = id => document.getElementById(id);
 
-const icons = ["☀️", "🌤️", "☁️", "🌧️", "❄️", "🌫️", "⛈️"];
+let forecastData = null;
+let selectedDay = 0;
 
 function weatherIcon(code) {
   if (code === 0) return "☀️";
@@ -236,7 +344,7 @@ function weatherIcon(code) {
   if (code >= 80 && code <= 82) return "🌦️";
   if (code >= 85 && code <= 86) return "🌨️";
   if (code >= 95) return "⛈️";
-  return icons[2];
+  return "☁️";
 }
 
 function weatherText(code) {
@@ -249,18 +357,21 @@ function weatherText(code) {
   if (code >= 80 && code <= 82) return "Averses";
   if (code >= 85 && code <= 86) return "Averses de neige";
   if (code >= 95) return "Orage";
-  return "Ciel mystérieux";
+  return "Temps variable";
 }
 
-function showStatus(text) {
-  $("status").textContent = text;
+function showStatus(message) {
+  $("status").textContent = message;
 }
 
-/*
- * Recherche le nom de la ville à partir des coordonnées GPS.
- * Si le service de localisation du nom échoue, on garde
- * une solution de secours et la météo peut quand même charger.
- */
+function formatDay(date) {
+  return new Date(date + "T12:00:00").toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "short"
+  });
+}
+
 async function getCityName(lat, lon) {
   try {
     const url =
@@ -270,29 +381,16 @@ async function getCityName(lat, lon) {
       "&localityLanguage=fr";
 
     const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error("Nom de ville indisponible");
-    }
+    if (!response.ok) throw new Error("Ville indisponible");
 
     const data = await response.json();
+    const city = data.city || data.locality ||
+      data.principalSubdivision || "Ma position";
 
-    const city =
-      data.city ||
-      data.locality ||
-      data.localityInfo?.administrative
-        ?.map(item => item.name)
-        .find(name => name && name !== data.countryName) ||
-      data.principalSubdivision ||
-      "Ma position";
-
-    if (data.countryName && city !== "Ma position") {
-      return city + ", " + data.countryName;
-    }
-
-    return city;
+    return data.countryName && city !== "Ma position"
+      ? city + ", " + data.countryName
+      : city;
   } catch (error) {
-    console.error("Recherche du nom de ville :", error);
     return "Ma position";
   }
 }
@@ -307,16 +405,15 @@ async function loadWeather(lat, lon, name) {
       "&longitude=" + encodeURIComponent(lon) +
       "&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_gusts_10m" +
       "&hourly=temperature_2m,precipitation_probability,precipitation,weather_code" +
-      "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max" +
+      "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum" +
       "&timezone=auto&forecast_days=7";
 
     const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error("Prévisions indisponibles");
-    }
+    if (!response.ok) throw new Error("Prévisions indisponibles");
 
     const d = await response.json();
+    forecastData = d;
+
     const c = d.current;
 
     $("place").textContent = "📍 " + name;
@@ -324,85 +421,169 @@ async function loadWeather(lat, lon, name) {
     $("temp").textContent = Math.round(c.temperature_2m) + "°C";
     $("description").textContent = weatherText(c.weather_code);
     $("feels").textContent = Math.round(c.apparent_temperature) + "°C";
-
-    $("rain").textContent =
-      (d.hourly.precipitation_probability[0] ?? 0) + " %";
-
     $("amount").textContent = c.precipitation + " mm";
-
     $("wind").textContent =
       Math.round(c.wind_speed_10m) + " / " +
       Math.round(c.wind_gusts_10m) + " km/h";
 
+    const currentHourIndex = d.hourly.time.findIndex(t => t >= c.time);
+    const safeStart = Math.max(0, currentHourIndex);
+
+    $("rain").textContent =
+      (d.hourly.precipitation_probability[safeStart] ?? 0) + " %";
+
     $("updated").textContent =
       "Données météo : " + c.time.replace("T", " ");
 
-    const start = d.hourly.time.findIndex(t => t >= c.time);
-
-    $("hours").innerHTML =
-      d.hourly.time.slice(start, start + 12).map((t, i) => {
-        const n = start + i;
-
+    $("hours").innerHTML = d.hourly.time
+      .slice(safeStart, safeStart + 12)
+      .map((time, i) => {
+        const n = safeStart + i;
         return `
           <div class="day">
-            <span>${t.slice(11, 16)} ${weatherIcon(d.hourly.weather_code[n])}</span>
+            <span>${time.slice(11,16)} ${weatherIcon(d.hourly.weather_code[n])}</span>
             <strong>${Math.round(d.hourly.temperature_2m[n])}°C</strong>
-            <span>${d.hourly.precipitation_probability[n] ?? 0}% 🌧️</span>
-          </div>
-        `;
+            <span class="rain">${d.hourly.precipitation_probability[n] ?? 0}% 🌧️</span>
+          </div>`;
       }).join("");
 
-    $("week").innerHTML = d.daily.time.map((t, i) => {
-      const date = new Date(t + "T12:00:00").toLocaleDateString(
-        "fr-FR",
-        { weekday: "long", day: "numeric" }
-      );
+    selectedDay = 0;
+    renderWeek();
+    renderChart();
+    renderDayDetail(0);
 
-      return `
-        <div class="day">
-          <span>${date} ${weatherIcon(d.daily.weather_code[i])}</span>
-          <strong>
-            ${Math.round(d.daily.temperature_2m_max[i])}° /
-            ${Math.round(d.daily.temperature_2m_min[i])}°
-          </strong>
-          <span>${d.daily.precipitation_probability_max[i] ?? 0}%</span>
-        </div>
-      `;
-    }).join("");
-
-    localStorage.setItem(
-      "meteo-cache",
-      JSON.stringify({
-        lat,
-        lon,
-        name,
-        d,
-        saved: Date.now()
-      })
-    );
+    localStorage.setItem("meteo-cache", JSON.stringify({
+      lat, lon, name, d, saved: Date.now()
+    }));
 
     showStatus("✨ Les prévisions sont à jour.");
   } catch (error) {
-    console.error("Chargement météo :", error);
-
-    const cached = localStorage.getItem("meteo-cache");
-
-    if (cached) {
-      try {
-        const old = JSON.parse(cached);
-
-        showStatus(
-          "📜 Connexion indisponible. Dernière consultation : " +
-          new Date(old.saved).toLocaleString("fr-FR") +
-          ". Reconnecte-toi pour actualiser les données."
-        );
-      } catch (e) {
-        showStatus("Impossible de charger la météo. Vérifie ta connexion.");
-      }
-    } else {
-      showStatus("Impossible de charger la météo. Vérifie ta connexion.");
-    }
+    console.error(error);
+    showStatus("Impossible de charger la météo. Vérifie ta connexion.");
   }
+}
+
+function renderWeek() {
+  if (!forecastData) return;
+
+  const d = forecastData.daily;
+
+  $("week").innerHTML = d.time.map((date, i) => `
+    <div class="day ${i === selectedDay ? "selected" : ""}">
+      <button type="button" data-day="${i}" aria-pressed="${i === selectedDay}">
+        ${weatherIcon(d.weather_code[i])} ${formatDay(date)}
+      </button>
+      <span class="temps">
+        ${Math.round(d.temperature_2m_max[i])}° /
+        ${Math.round(d.temperature_2m_min[i])}°
+      </span>
+      <span class="rain">${d.precipitation_probability_max[i] ?? 0}% 🌧️</span>
+    </div>
+  `).join("");
+
+  $("week").querySelectorAll("button[data-day]").forEach(button => {
+    button.addEventListener("click", () => {
+      selectedDay = Number(button.dataset.day);
+      renderWeek();
+      renderChart();
+      renderDayDetail(selectedDay);
+    });
+  });
+}
+
+function renderChart() {
+  if (!forecastData) return;
+
+  const d = forecastData.daily;
+  const maxValues = d.temperature_2m_max;
+  const minValues = d.temperature_2m_min;
+
+  const all = [...maxValues, ...minValues].filter(Number.isFinite);
+  if (!all.length) return;
+
+  let low = Math.floor(Math.min(...all) - 2);
+  let high = Math.ceil(Math.max(...all) + 2);
+
+  if (low === high) high = low + 1;
+
+  const left = 34, right = 326, top = 20, bottom = 174;
+  const x = i => left + i * (right - left) / 6;
+  const y = value => bottom - (value - low) * (bottom - top) / (high - low);
+
+  let svg = "";
+
+  for (let i = 0; i <= 4; i++) {
+    const value = low + (high - low) * i / 4;
+    const yy = y(value);
+    svg += `
+      <line x1="${left}" y1="${yy}" x2="${right}" y2="${yy}"
+        stroke="#343d65" stroke-width="1"/>
+      <text x="27" y="${yy + 4}" fill="#b9bfdc" font-size="10"
+        text-anchor="end">${Math.round(value)}°</text>`;
+  }
+
+  function points(values) {
+    return values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+  }
+
+  svg += `
+    <polyline points="${points(maxValues)}" fill="none"
+      stroke="#ffbd69" stroke-width="3" stroke-linejoin="round"
+      stroke-linecap="round"/>
+    <polyline points="${points(minValues)}" fill="none"
+      stroke="#91caff" stroke-width="3" stroke-linejoin="round"
+      stroke-linecap="round"/>`;
+
+  for (let i = 0; i < 7; i++) {
+    const dayLabel = new Date(d.time[i] + "T12:00:00")
+      .toLocaleDateString("fr-FR", { weekday: "short" })
+      .replace(".", "");
+
+    if (i === selectedDay) {
+      svg += `
+        <rect x="${x(i)-18}" y="${top-7}" width="36"
+          height="${bottom-top+20}" rx="9" fill="#c5b8ff"
+          opacity=".12"/>`;
+    }
+
+    svg += `
+      <circle cx="${x(i)}" cy="${y(maxValues[i])}" r="${i === selectedDay ? 5 : 3.5}"
+        fill="#ffbd69" stroke="#111831" stroke-width="1"/>
+      <circle cx="${x(i)}" cy="${y(minValues[i])}" r="${i === selectedDay ? 5 : 3.5}"
+        fill="#91caff" stroke="#111831" stroke-width="1"/>
+      <text x="${x(i)}" y="198" text-anchor="middle"
+        font-size="10" fill="${i === selectedDay ? "#ffffff" : "#b9bfdc"}">
+        ${dayLabel}
+      </text>`;
+  }
+
+  $("chart").innerHTML = svg;
+}
+
+function renderDayDetail(i) {
+  if (!forecastData) return;
+
+  const d = forecastData.daily;
+
+  $("dayDetail").innerHTML = `
+    <div class="detail-title">
+      ${weatherIcon(d.weather_code[i])} ${formatDay(d.time[i])}
+    </div>
+    <p>${weatherText(d.weather_code[i])}</p>
+    <div class="grid">
+      <div class="metric">🌡️ Maximum
+        <strong>${Math.round(d.temperature_2m_max[i])}°C</strong>
+      </div>
+      <div class="metric">❄️ Minimum
+        <strong>${Math.round(d.temperature_2m_min[i])}°C</strong>
+      </div>
+      <div class="metric">🌧️ Risque de pluie
+        <strong>${d.precipitation_probability_max[i] ?? 0}%</strong>
+      </div>
+      <div class="metric">💧 Pluie prévue
+        <strong>${d.precipitation_sum?.[i] ?? 0} mm</strong>
+      </div>
+    </div>`;
 }
 
 async function searchCity(city) {
@@ -411,7 +592,7 @@ async function searchCity(city) {
     return;
   }
 
-  showStatus("🔎 Recherche de cette ville…");
+  showStatus("🔎 Recherche de la ville…");
 
   try {
     const url =
@@ -420,25 +601,22 @@ async function searchCity(city) {
       "&count=1&language=fr&format=json";
 
     const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error("Recherche indisponible");
-    }
+    if (!response.ok) throw new Error();
 
     const data = await response.json();
-
     if (!data.results?.length) {
-      throw new Error("Ville introuvable");
+      showStatus("Ville introuvable. Essaie un autre nom.");
+      return;
     }
 
     const p = data.results[0];
-
-    const name =
-      p.name + (p.country ? ", " + p.country : "");
-
-    await loadWeather(p.latitude, p.longitude, name);
+    await loadWeather(
+      p.latitude,
+      p.longitude,
+      p.name + (p.country ? ", " + p.country : "")
+    );
   } catch (error) {
-    showStatus("Ville introuvable ou connexion indisponible.");
+    showStatus("Recherche impossible. Vérifie ta connexion.");
   }
 }
 
@@ -447,79 +625,52 @@ $("searchForm").addEventListener("submit", event => {
   searchCity($("city").value);
 });
 
-/*
- * Bouton Ma position :
- * 1. Récupère les coordonnées GPS.
- * 2. Recherche le nom réel de la ville.
- * 3. Charge la météo locale.
- */
 $("gps").addEventListener("click", () => {
   if (!navigator.geolocation) {
-    showStatus("La géolocalisation n'est pas disponible sur ce navigateur.");
+    showStatus("La géolocalisation n'est pas disponible.");
     return;
   }
 
   $("gps").disabled = true;
   showStatus("📍 Recherche de ta position…");
 
-  navigator.geolocation.getCurrentPosition(
-    async position => {
-      try {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-
-        showStatus("🏙️ Recherche du nom de ta ville…");
-
-        const cityName = await getCityName(lat, lon);
-
-        await loadWeather(lat, lon, cityName);
-      } finally {
-        $("gps").disabled = false;
-      }
-    },
-    error => {
+  navigator.geolocation.getCurrentPosition(async position => {
+    try {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      showStatus("🏙️ Recherche du nom de ta ville…");
+      const name = await getCityName(lat, lon);
+      await loadWeather(lat, lon, name);
+    } finally {
       $("gps").disabled = false;
-
-      if (error.code === 1) {
-        showStatus(
-          "Accès à la position refusé. Autorise la localisation dans ton navigateur."
-        );
-      } else if (error.code === 3) {
-        showStatus(
-          "La recherche GPS a pris trop de temps. Réessaie."
-        );
-      } else {
-        showStatus(
-          "Position indisponible. Vérifie les réglages de localisation ou recherche une ville."
-        );
-      }
-    },
-    {
-      enableHighAccuracy: false,
-      timeout: 15000,
-      maximumAge: 300000
     }
-  );
+  }, error => {
+    $("gps").disabled = false;
+
+    if (error.code === 1) {
+      showStatus("Autorise la localisation dans les réglages de ton navigateur.");
+    } else {
+      showStatus("Position indisponible. Réessaie ou recherche une ville.");
+    }
+  }, {
+    enableHighAccuracy: false,
+    timeout: 15000,
+    maximumAge: 300000
+  });
 });
 
-/* Recharge la dernière ville consultée si elle existe. */
 const saved = localStorage.getItem("meteo-cache");
 
 if (saved) {
   try {
     const old = JSON.parse(saved);
-
-    showStatus(
-      "Dernière ville consultée : " + old.name + ". Actualisation…"
-    );
-
+    showStatus("Actualisation de la dernière ville consultée…");
     loadWeather(old.lat, old.lon, old.name);
   } catch (error) {
     console.error("Cache météo invalide :", error);
   }
 }
 
-/* Enregistrement du service worker pour le fonctionnement PWA. */
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js")
