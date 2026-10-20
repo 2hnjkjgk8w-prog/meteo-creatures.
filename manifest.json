@@ -1,0 +1,20 @@
+
+{
+  "name": "Météo des petites créatures",
+  "short_name": "Météo Lunaire",
+  "description": "Les secrets du ciel, chaque jour.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#10152d",
+  "theme_color": "#10152d",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
