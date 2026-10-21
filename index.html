@@ -1,618 +1,192 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#11152b">
-<meta name="description" content="La météo des petites créatures, un univers météo fantastique en pixel art.">
-<title>Météo des petites créatures</title>
-<link rel="manifest" href="./manifest.json">
-<link rel="icon" href="./icon.svg" type="image/svg+xml">
-
-<style>
-:root {
-  color-scheme: dark;
-  --bg: #101329;
-  --panel: #1c2141;
-  --panel2: #252b50;
-  --text: #f4f2ff;
-  --muted: #b9bfdc;
-  --purple: #b9a2ff;
-  --blue: #8bd9ff;
-  --border: #414875;
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  color: var(--text);
-  background: radial-gradient(ellipse at 50% 0%, #29315d, transparent 48%), var(--bg);
-  font: 14px/1.55 "Courier New", monospace;
-}
-button, input { font: inherit; }
-button {
-  cursor: pointer;
-  color: var(--text);
-  background: var(--panel2);
-  border: 2px solid var(--border);
-  border-radius: 4px;
-  padding: 11px 13px;
-  box-shadow: 0 3px 0 #090c1c;
-}
-button:active { transform: translateY(2px); box-shadow: none; }
-button:focus-visible, input:focus-visible {
-  outline: 2px solid var(--blue);
-  outline-offset: 3px;
-}
-.app { max-width: 760px; margin: auto; padding: 18px 14px 36px; }
-header { text-align: center; margin-bottom: 20px; }
-.brand {
-  font-size: clamp(21px, 5vw, 31px);
-  line-height: 1.3;
-  color: var(--purple);
-  text-shadow: 3px 3px #34275c;
-  margin: 8px 0;
-}
-.subtitle, .muted { color: var(--muted); font-size: 12px; }
-.pixel-label {
-  color: var(--blue);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-.panel {
-  background: linear-gradient(145deg, #20264a, #171b36);
-  border: 2px solid var(--border);
-  border-radius: 5px;
-  padding: 15px;
-  margin-bottom: 15px;
-  box-shadow: 0 5px 0 #090c1c;
-}
-h2 { font-size: 16px; margin: 0 0 12px; color: var(--purple); }
-p { margin: 7px 0; }
-.hidden { display: none !important; }
-.search-row { display: flex; gap: 8px; margin-top: 8px; }
-.search-row input {
-  min-width: 0; flex: 1; padding: 12px;
-  color: white; background: #10142b;
-  border: 2px solid var(--border); border-radius: 4px;
-}
-.search-row button { white-space: nowrap; }
-.gps-button { width: 100%; margin-top: 9px; color: var(--blue); }
-.status { color: var(--muted); font-size: 12px; margin-top: 10px; }
-.error { color: #ffb7c8; }
-
-/* Ciel rétro */
-.sky {
-  position: relative; overflow: hidden; isolation: isolate;
-  min-height: 225px; padding: 17px; margin-bottom: 15px;
-  border: 3px solid #555b92; border-radius: 4px;
-  background: linear-gradient(#080d29, #171e48 70%, #35466f);
-  box-shadow: inset 0 0 0 3px #151a37, 0 5px 0 #090c1c;
-}
-.sky.day { background: linear-gradient(#4c9cd3, #87c8dc 67%, #a5d8b4); }
-.sky.dawn { background: linear-gradient(#3b315e, #c16d8b 55%, #f2bd92); }
-.sky-title, .sky-content { position: relative; z-index: 2; }
-.sky-title { display:flex; justify-content:space-between; gap:8px; font-size:11px; }
-.sky-content { text-align:center; padding: 9px 0 18px; }
-.sky-icon { font-size:49px; line-height:1.2; }
-.temperature { font-size:clamp(37px,10vw,52px); font-weight:bold; line-height:1.1; }
-.sky-description { margin-top:5px; }
-.stars {
-  position:absolute; inset:0; z-index:0; pointer-events:none;
-  background:
-    radial-gradient(circle, #fff5b5 1.5px, transparent 2px) 12px 20px / 61px 43px,
-    radial-gradient(circle, white 1px, transparent 2px) 24px 8px / 47px 37px;
-  animation: twinkle 3s steps(2,end) infinite alternate;
-}
-.day .stars, .dawn .stars { opacity:.08; }
-@keyframes twinkle { from {opacity:.45} to {opacity:1} }
-.pixel-moon {
-  position:absolute; top:43px; right:12%; width:35px; height:35px;
-  background:#fff1a8; box-shadow:0 0 0 4px #fff1a8, 0 0 18px 7px #b8caff55;
-  z-index:1;
-}
-.pixel-moon:after {
-  content:""; position:absolute; top:-5px; left:12px; width:30px; height:32px;
-  background:#171e48; box-shadow:0 0 0 2px #171e48;
-}
-.day .pixel-moon, .dawn .pixel-moon { display:none; }
-.ground {
-  position:absolute; bottom:0; left:0; right:0; height:24px; z-index:1;
-  background:repeating-linear-gradient(90deg,#283a55 0 12px,#344765 12px 24px);
-  border-top:4px solid #66836f;
-}
-.day .ground {
-  background:repeating-linear-gradient(90deg,#477a65 0 12px,#548a6e 12px 24px);
-  border-top-color:#a1d49a;
-}
-.creature {
-  position:absolute; bottom:17px; left:16%; z-index:2;
-  font-size:30px; animation:bob 2s steps(3,end) infinite;
-}
-@keyframes bob { 0%,100% {transform:translateY(0)} 50% {transform:translateY(-4px)} }
-
-.stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
-.stat, .detail, .hour {
-  background:#11152d; border:1px solid #343c6a; border-radius:4px; padding:10px;
-}
-.stat-label { color:var(--muted); font-size:11px; }
-.stat-value { font-size:16px; color:var(--blue); margin-top:4px; overflow-wrap:anywhere; }
-.moon-card { display:grid; grid-template-columns:82px 1fr; gap:12px; align-items:center; }
-.moon-art {
-  width:70px; height:70px; display:grid; place-items:center; font-size:53px;
-  background:#11152d; border:2px solid #343c6a; border-radius:4px;
-}
-.moon-name { color:var(--blue); font-weight:bold; font-size:15px; }
-.season-card {
-  overflow:hidden; border:2px solid var(--border); border-radius:4px;
-  padding:15px; background:linear-gradient(120deg,#273456,#1a203d);
-}
-.season-icon { font-size:35px; float:right; margin-left:8px; }
-.season-name { font-size:19px; color:#a9efbd; }
-.season-message { color:var(--muted); font-size:12px; margin-top:7px; }
-.forecast-list { display:grid; gap:7px; }
-.day-button {
-  display:grid; grid-template-columns:1fr auto auto; gap:12px; align-items:center;
-  width:100%; text-align:left; padding:11px; box-shadow:none;
-}
-.day-button.selected { border-color:var(--purple); background:#35315f; }
-.day-weather { font-size:20px; }
-.day-temps { white-space:nowrap; color:var(--blue); }
-.day-low { color:var(--muted); }
-.graph-wrap { width:100%; overflow:hidden; margin-top:8px; }
-#temperatureGraph { width:100%; height:auto; display:block; }
-.graph-legend { display:flex; gap:16px; font-size:11px; color:var(--muted); }
-.legend-high { color:#ffb5cf; }
-.legend-low { color:var(--blue); }
-.hour-list { display:flex; gap:8px; overflow-x:auto; padding:4px 2px 12px; }
-.hour { min-width:83px; text-align:center; }
-.hour-time { color:var(--muted); font-size:11px; }
-.hour-icon { font-size:23px; margin:6px 0; }
-.hour-temp { color:var(--blue); font-size:17px; }
-.detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
-.detail strong { display:block; color:var(--blue); margin-top:4px; }
-.footer { text-align:center; color:var(--muted); font-size:11px; padding:12px; }
-
-/* Affichage du message secret */
-.secret-panel { text-align:center; padding:18px 12px 22px; }
-.secret-panel img {
-  display:block; width:100%; max-width:420px; height:auto;
-  margin:0 auto 15px; border:2px solid #b9a2ff; border-radius:5px;
-  image-rendering:pixelated;
-}
-.secret-panel button { margin-top:14px; color:#ffc0e3; }
-
-@media (min-width:600px) {
-  .stats { grid-template-columns:repeat(4,minmax(0,1fr)); }
-  .detail-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
-}
-@media (prefers-reduced-motion:reduce) {
-  *,*:before,*:after { animation:none !important; }
-}
-</style>
-</head>
-
-<body>
-<main class="app">
-<header>
-  <div style="font-size:32px">🌦️ 🐾 ✨</div>
-  <h1 class="brand">Météo des petites créatures</h1>
-  <div class="subtitle">Un petit monde météo en pixel art</div>
-</header>
-
-<section class="panel" id="searchPanel">
-  <div class="pixel-label">Choisir son royaume</div>
-  <form id="searchForm">
-    <div class="search-row">
-      <input id="cityInput" type="search" placeholder="Ex. Lyon, Paris..." autocomplete="off" required>
-      <button type="submit">Chercher</button>
-    </div>
-  </form>
-  <button id="gpsButton" class="gps-button" type="button">📍 Ma position</button>
-  <div id="status" class="status" role="status" aria-live="polite">Préparation du petit monde...</div>
-</section>
-
-<section id="secretCat" class="panel secret-panel hidden" aria-live="polite">
-  <img src="./cat-message.svg" alt="Un petit chaton pixel art avec le message : Je t’aime ma princesse">
-  <button id="backToWeather" type="button">🐾 Retour à la météo</button>
-</section>
-
-<div id="weatherApp">
-  <section class="sky night" id="skyPanel" aria-label="Météo actuelle">
-    <div class="stars"></div><div class="pixel-moon"></div>
-    <div class="sky-title"><span id="skyLocation">Mon royaume</span><span id="skyTime">☾ Ciel enchanté</span></div>
-    <div class="sky-content">
-      <div class="sky-icon" id="currentIcon">🌤️</div>
-      <div class="temperature" id="currentTemp">--°</div>
-      <div class="sky-description" id="currentDescription">En attente de la météo...</div>
-      <div class="muted" id="feelsLike">Ressenti : --°</div>
-    </div>
-    <div class="creature" id="weatherCreature">🐸</div><div class="ground"></div>
-  </section>
-
-  <section class="panel">
-    <h2>📜 Le grimoire météo</h2>
-    <div class="stats">
-      <div class="stat"><div class="stat-label">💧 Pluie</div><div class="stat-value" id="rainChance">-- %</div></div>
-      <div class="stat"><div class="stat-label">🌧️ Précipitations</div><div class="stat-value" id="precipitation">-- mm</div></div>
-      <div class="stat"><div class="stat-label">🍃 Vent</div><div class="stat-value" id="wind">-- km/h</div></div>
-      <div class="stat"><div class="stat-label">💦 Humidité</div><div class="stat-value" id="humidity">-- %</div></div>
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2>🌙 La lune du royaume</h2>
-    <div class="moon-card">
-      <div class="moon-art" id="moonIcon">🌙</div>
-      <div><div class="moon-name" id="moonName">Lune mystérieuse</div>
-        <p id="moonIllumination">Éclairage : -- %</p>
-        <div class="muted" id="moonMessage">Les étoiles attendent la nuit...</div>
-      </div>
-    </div>
-    <p class="muted" id="moonPhaseDate">Phase lunaire estimée à partir de la date du jour.</p>
-  </section>
-
-  <section class="panel">
-    <h2>🍂 La saison enchantée</h2>
-    <div class="season-card">
-      <span class="season-icon" id="seasonIcon">🌱</span>
-      <div class="pixel-label" id="hemisphereLabel">Calendrier naturel</div>
-      <div class="season-name" id="seasonName">Printemps</div>
-      <div class="season-message" id="seasonMessage">Le monde s'éveille.</div>
-      <div class="muted" id="seasonDate" style="margin-top:8px"></div>
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2>🕰️ Les prochaines heures</h2>
-    <div id="hourlyForecast" class="hour-list"><div class="muted">Chargement...</div></div>
-  </section>
-
-  <section class="panel">
-    <h2>📅 Les 7 prochains jours</h2>
-    <p class="muted">Choisis une journée pour découvrir ses détails.</p>
-    <div id="forecastList" class="forecast-list"></div>
-  </section>
-
-  <section class="panel">
-    <h2>📈 Le graphique des températures</h2>
-    <div class="graph-legend"><span class="legend-high">■ Maximum</span><span class="legend-low">■ Minimum</span></div>
-    <div class="graph-wrap"><svg id="temperatureGraph" viewBox="0 0 320 160" role="img" aria-label="Graphique des températures sur sept jours"><text x="160" y="80" fill="#b9bfdc" text-anchor="middle">Chargement...</text></svg></div>
-  </section>
-
-  <section class="panel">
-    <h2 id="selectedDayTitle">🔎 Détails de la journée</h2>
-    <div class="detail-grid">
-      <div class="detail"><span class="muted">🌡️ Maximum</span><strong id="dayMax">--°</strong></div>
-      <div class="detail"><span class="muted">❄️ Minimum</span><strong id="dayMin">--°</strong></div>
-      <div class="detail"><span class="muted">☔ Risque de pluie</span><strong id="dayRain">-- %</strong></div>
-      <div class="detail"><span class="muted">💧 Pluie prévue</span><strong id="dayPrecip">-- mm</strong></div>
-    </div>
-  </section>
-</div>
-
-<div class="footer">🌟 Prends soin de tes petites créatures. 🌟<br>Les données météo proviennent d'Open-Meteo.</div>
-</main>
-
-<script>
-(() => {
-"use strict";
-const $ = id => document.getElementById(id);
-const CACHE_KEY = "meteo-cache";
-let forecast = null;
-let selectedDay = 0;
-let currentLocation = {name:"Paris",latitude:48.8566,longitude:2.3522};
-let locationTimezone = "Europe/Paris";
-
-const weatherDescriptions = {
-  0:["Ciel dégagé","☀️","🦊"],1:["Peu nuageux","🌤️","🐿️"],
-  2:["Partiellement nuageux","⛅","🐰"],3:["Couvert","☁️","🐑"],
-  45:["Brouillard","🌫️","👻"],48:["Brouillard givrant","🌫️","🐧"],
-  51:["Bruine légère","🌦️","🐸"],53:["Bruine modérée","🌦️","🐸"],
-  55:["Bruine dense","🌧️","🐸"],56:["Bruine verglaçante","🌧️","🐧"],
-  57:["Bruine verglaçante dense","🌧️","🐧"],61:["Pluie légère","🌦️","🐸"],
-  63:["Pluie modérée","🌧️","🐸"],65:["Forte pluie","🌧️","🐸"],
-  66:["Pluie verglaçante","🌧️","🐧"],67:["Forte pluie verglaçante","🌧️","🐧"],
-  71:["Neige légère","🌨️","🐻‍❄️"],73:["Neige modérée","🌨️","🐻‍❄️"],
-  75:["Forte neige","❄️","🐻‍❄️"],77:["Grains de neige","🌨️","🐧"],
-  80:["Averses légères","🌦️","🐸"],81:["Averses modérées","🌧️","🐸"],
-  82:["Fortes averses","⛈️","🐸"],85:["Averses de neige","🌨️","🐧"],
-  86:["Fortes averses de neige","❄️","🐧"],95:["Orage","⛈️","🐲"],
-  96:["Orage et grêle","⛈️","🐲"],99:["Fort orage et grêle","⛈️","🐲"]
-};
-const weatherInfo = code => weatherDescriptions[code] || ["Météo mystérieuse","🌈","🦄"];
-
-function setStatus(message, error=false) {
-  $("status").textContent = message;
-  $("status").classList.toggle("error", error);
-}
-function fmt(value,digits=0) {
-  const n=Number(value);
-  return Number.isFinite(n) ? n.toFixed(digits).replace(".",",") : "--";
-}
-function temp(value) {
-  return Number.isFinite(Number(value)) ? `${Math.round(Number(value))}°C` : "--°";
-}
-function dateString(date=new Date()) {
-  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
-}
-function dateFromString(value) {
-  const p=String(value).split("-").map(Number);
-  return new Date(p[0],p[1]-1,p[2],12);
-}
-function dayLabel(value,options={weekday:"short",day:"numeric",month:"short"}) {
-  return new Intl.DateTimeFormat("fr-FR",options).format(dateFromString(value));
-}
-
-/* Le code secret est volontairement absent de tout texte visible dans l'application. */
-function normalizeSecret(value) {
-  return value.toLocaleLowerCase("fr-FR")
-    .normalize("NFC")
-    .replace(/[’‘`]/g,"'")
-    .trim()
-    .replace(/\s+/g," ");
-}
-function showSecretCat() {
-  $("weatherApp").classList.add("hidden");
-  $("secretCat").classList.remove("hidden");
-  $("cityInput").blur();
-}
-function hideSecretCat() {
-  $("secretCat").classList.add("hidden");
-  $("weatherApp").classList.remove("hidden");
-  $("cityInput").value="";
-  setStatus("De retour dans ton petit monde météo.");
-}
-$("backToWeather").addEventListener("click",hideSecretCat);
-
-function getMoonPhase(date) {
-  const month=29.530588853;
-  const known=Date.UTC(2000,0,6,18,14);
-  const timestamp=Date.UTC(date.getFullYear(),date.getMonth(),date.getDate(),12);
-  const age=((timestamp-known)/86400000%month+month)%month;
-  const f=age/month;
-  const illumination=Math.round((1-Math.cos(2*Math.PI*f))/2*100);
-  let name,icon,message;
-  if(f<.035||f>=.965){name="Nouvelle lune";icon="🌑";message="La nuit garde ses secrets.";}
-  else if(f<.22){name="Premier croissant";icon="🌒";message="Une lueur magique grandit.";}
-  else if(f<.28){name="Premier quartier";icon="🌓";message="La lune reprend des forces.";}
-  else if(f<.47){name="Lune gibbeuse croissante";icon="🌔";message="La lumière gagne le ciel.";}
-  else if(f<.535){name="Pleine lune";icon="🌕";message="La magie lunaire est à son sommet.";}
-  else if(f<.72){name="Lune gibbeuse décroissante";icon="🌖";message="La lune partage doucement sa lumière.";}
-  else if(f<.78){name="Dernier quartier";icon="🌗";message="Le ciel se prépare au renouveau.";}
-  else{name="Dernier croissant";icon="🌘";message="Une dernière lueur avant le renouveau.";}
-  return {name,icon,illumination,message};
-}
-function getSeason(date,latitude) {
-  const m=date.getMonth(),north=latitude>=0;
-  let s;
-  if(north) {
-    if([2,3,4].includes(m))s=["Printemps","🌸","Les fleurs s'éveillent et les créatures sortent de leurs abris."];
-    else if([5,6,7].includes(m))s=["Été","☀️","Les longues journées invitent à l'exploration."];
-    else if([8,9,10].includes(m))s=["Automne","🍂","Les feuilles changent de couleur et les réserves se remplissent."];
-    else s=["Hiver","❄️","Les nuits sont longues et les créatures se reposent."];
-  } else {
-    if([2,3,4].includes(m))s=["Automne","🍂","Les feuilles changent de couleur et les réserves se remplissent."];
-    else if([5,6,7].includes(m))s=["Hiver","❄️","Les nuits sont longues et les créatures se reposent."];
-    else if([8,9,10].includes(m))s=["Printemps","🌸","Les fleurs s'éveillent et les créatures sortent de leurs abris."];
-    else s=["Été","☀️","Les longues journées invitent à l'exploration."];
-  }
-  return {name:s[0],icon:s[1],message:s[2],hemisphere:north?"Hémisphère nord":"Hémisphère sud"};
-}
-function updateSkyTheme() {
-  const h=new Date().getHours(),sky=$("skyPanel");
-  sky.classList.remove("day","dawn","night");
-  sky.classList.add(h>=7&&h<17?"day":((h>=5&&h<7)||(h>=17&&h<20)?"dawn":"night"));
-  $("skyTime").textContent=sky.classList.contains("day")?"☀ Jour":sky.classList.contains("dawn")?"🌅 Crépuscule":"☾ Nuit étoilée";
-}
-function updateMoonSeason(latitude) {
-  const now=new Date(),moon=getMoonPhase(now);
-  $("moonIcon").textContent=moon.icon;
-  $("moonName").textContent=moon.name;
-  $("moonIllumination").textContent=`Éclairage estimé : ${moon.illumination} %`;
-  $("moonMessage").textContent=moon.message;
-  $("moonPhaseDate").textContent=`Phase approximative du ${dayLabel(dateString(now),{day:"numeric",month:"long",year:"numeric"})}.`;
-  const s=getSeason(now,latitude);
-  $("seasonIcon").textContent=s.icon;
-  $("seasonName").textContent=s.name;
-  $("seasonMessage").textContent=s.message;
-  $("hemisphereLabel").textContent=s.hemisphere;
-  $("seasonDate").textContent=`Date locale : ${dayLabel(dateString(now),{day:"numeric",month:"long",year:"numeric"})}`;
-}
-async function searchCity(name) {
-  const url=`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=8&language=fr&format=json`;
-  const r=await fetch(url);
-  if(!r.ok)throw new Error("La recherche de ville a échoué.");
-  const data=await r.json();
-  if(!data.results?.length)throw new Error("Ville introuvable. Vérifie l'orthographe.");
-  return data.results;
-}
-async function reverseGeocode(lat,lon) {
-  try {
-    const r=await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=fr`);
-    if(!r.ok)throw new Error();
-    const d=await r.json();
-    return d.city||d.locality||d.principalSubdivision||"Ma position";
-  } catch(_) { return "Ma position"; }
-}
-function readCache() {
-  try {
-    const d=JSON.parse(localStorage.getItem(CACHE_KEY)||"null");
-    return d?.forecast&&d?.location?d:null;
-  } catch(_) { return null; }
-}
-async function loadWeather(location) {
-  setStatus("Les petites créatures consultent le ciel...");
-  $("gpsButton").disabled=true;
-  try {
-    currentLocation={name:location.name,latitude:Number(location.latitude),longitude:Number(location.longitude)};
-    locationTimezone=location.timezone||"auto";
-    const url=new URL("https://api.open-meteo.com/v1/forecast");
-    url.search=new URLSearchParams({
-      latitude:currentLocation.latitude,longitude:currentLocation.longitude,
-      timezone:locationTimezone,forecast_days:"7",
-      current:"temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m",
-      hourly:"temperature_2m,precipitation_probability,precipitation,weather_code",
-      daily:"weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,sunrise,sunset",
-      wind_speed_unit:"kmh"
-    });
-    const r=await fetch(url);
-    if(!r.ok)throw new Error("Impossible de récupérer la météo pour le moment.");
-    forecast=await r.json();
-    localStorage.setItem(CACHE_KEY,JSON.stringify({savedAt:Date.now(),location:currentLocation,timezone:locationTimezone,forecast}));
-    renderWeather();
-    setStatus(`Météo mise à jour pour ${currentLocation.name}.`);
-  } catch(error) {
-    const cached=readCache();
-    if(cached) {
-      currentLocation=cached.location;locationTimezone=cached.timezone||"auto";forecast=cached.forecast;
-      renderWeather();
-      setStatus(`Connexion indisponible. Dernières données enregistrées pour ${currentLocation.name}.`,true);
-    } else setStatus(error.message||"Une erreur est survenue. Réessaie.",true);
-  } finally { $("gpsButton").disabled=false; }
-}
-function renderWeather() {
-  if(!forecast?.current)return;
-  const c=forecast.current,info=weatherInfo(c.weather_code);
-  $("skyLocation").textContent=currentLocation.name;
-  $("currentIcon").textContent=info[1];
-  $("currentTemp").textContent=temp(c.temperature_2m);
-  $("currentDescription").textContent=info[0];
-  $("feelsLike").textContent=`Ressenti : ${temp(c.apparent_temperature)}`;
-  $("weatherCreature").textContent=info[2];
-  $("rainChance").textContent=`${fmt(forecast.daily.precipitation_probability_max[0])} %`;
-  $("precipitation").textContent=`${fmt(c.precipitation,1)} mm`;
-  $("wind").textContent=`${fmt(c.wind_speed_10m)} km/h`;
-  $("humidity").textContent=`${fmt(c.relative_humidity_2m)} %`;
-  updateSkyTheme();updateMoonSeason(currentLocation.latitude);
-  renderHourly();renderDays();renderGraph();renderSelectedDay();
-}
-function renderHourly() {
-  const box=$("hourlyForecast");box.replaceChildren();
-  const h=forecast.hourly,now=new Date();
-  let start=h.time.findIndex(t=>new Date(t)>=now);
-  if(start<0)start=0;
-  for(let i=start;i<Math.min(start+12,h.time.length);i++) {
-    const card=document.createElement("div");card.className="hour";
-    const info=weatherInfo(h.weather_code[i]);
-    card.innerHTML=`<div class="hour-time">${h.time[i].slice(11,16)}</div>
-      <div class="hour-icon">${info[1]}</div><div class="hour-temp">${temp(h.temperature_2m[i])}</div>
-      <div class="muted">☔ ${fmt(h.precipitation_probability[i])}%</div>`;
-    box.appendChild(card);
-  }
-}
-function renderDays() {
-  const box=$("forecastList");box.replaceChildren();const d=forecast.daily;
-  for(let i=0;i<d.time.length;i++) {
-    const info=weatherInfo(d.weather_code[i]),b=document.createElement("button");
-    b.type="button";b.className="day-button"+(i===selectedDay?" selected":"");
-    b.setAttribute("aria-pressed",i===selectedDay?"true":"false");
-    const name=document.createElement("span");name.textContent=i===0?"Aujourd'hui":dayLabel(d.time[i]);
-    const icon=document.createElement("span");icon.className="day-weather";icon.textContent=info[1];icon.setAttribute("aria-label",info[0]);
-    const temps=document.createElement("span");temps.className="day-temps";
-    temps.innerHTML=`${temp(d.temperature_2m_max[i])} <span class="day-low">${temp(d.temperature_2m_min[i])}</span>`;
-    b.append(name,icon,temps);
-    b.addEventListener("click",()=>{selectedDay=i;renderDays();renderSelectedDay();});
-    box.appendChild(b);
-  }
-}
-function renderGraph() {
-  const svg=$("temperatureGraph"),d=forecast.daily;
-  const highs=d.temperature_2m_max,lows=d.temperature_2m_min;
-  const W=320,H=160,L=24,R=10,T=20,B=30,cw=W-L-R,ch=H-T-B;
-  const all=[...highs,...lows].map(Number).filter(Number.isFinite);
-  if(!all.length)return;
-  let min=Math.floor(Math.min(...all)/5)*5,max=Math.ceil(Math.max(...all)/5)*5;
-  if(max===min)max=min+5;
-  const x=i=>L+cw*i/Math.max(1,highs.length-1),y=v=>T+(max-v)/(max-min)*ch;
-  let s="";
-  for(let i=0;i<=4;i++) {
-    const v=min+(max-min)*i/4,yy=y(v);
-    s+=`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="#343c6a"/>`;
-    s+=`<text x="${L-5}" y="${yy+3}" text-anchor="end" font-size="8" fill="#b9bfdc">${Math.round(v)}°</text>`;
-  }
-  s+=`<polyline points="${highs.map((v,i)=>`${x(i)},${y(v)}`).join(" ")}" fill="none" stroke="#ffb5cf" stroke-width="2.5"/>`;
-  s+=`<polyline points="${lows.map((v,i)=>`${x(i)},${y(v)}`).join(" ")}" fill="none" stroke="#8bd9ff" stroke-width="2.5"/>`;
-  for(let i=0;i<highs.length;i++) {
-    s+=`<circle cx="${x(i)}" cy="${y(highs[i])}" r="3" fill="#ffb5cf"/>`;
-    s+=`<circle cx="${x(i)}" cy="${y(lows[i])}" r="3" fill="#8bd9ff"/>`;
-    s+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="8" fill="#b9bfdc">${i===0?"Auj.":dayLabel(d.time[i],{weekday:"short"})}</text>`;
-  }
-  svg.innerHTML=s;
-}
-function renderSelectedDay() {
-  if(!forecast?.daily)return;
-  const d=forecast.daily,i=Math.max(0,Math.min(selectedDay,d.time.length-1));
-  $("selectedDayTitle").textContent=`🔎 ${i===0?"Aujourd'hui":dayLabel(d.time[i])}`;
-  $("dayMax").textContent=temp(d.temperature_2m_max[i]);
-  $("dayMin").textContent=temp(d.temperature_2m_min[i]);
-  $("dayRain").textContent=`${fmt(d.precipitation_probability_max[i])} %`;
-  $("dayPrecip").textContent=`${fmt(d.precipitation_sum[i],1)} mm`;
-}
-
-$("searchForm").addEventListener("submit",async event=>{
-  event.preventDefault();
-  const typed=$("cityInput").value;
-  // La phrase secrète est testée avant toute recherche de ville.
-  if(normalizeSecret(typed)==="je t'aime mon chaton") {
-    showSecretCat();
-    return;
-  }
-  const name=typed.trim();
-  if(!name)return;
-  setStatus("Recherche de la ville...");
-  try {
-    const results=await searchCity(name);
-    let chosen=results[0];
-    if(results.length>1) {
-      const options=results.map((p,i)=>`${i+1}. ${p.name}${[p.admin1,p.country].filter(Boolean).join(", ") ? " ("+[p.admin1,p.country].filter(Boolean).join(", ")+")" : ""}`).join("\n");
-      const answer=prompt("Quelle ville veux-tu choisir ?\n\n"+options+"\n\nEntre le numéro :");
-      if(answer===null){setStatus("Recherche annulée.");return;}
-      const index=Number(answer)-1;
-      if(!Number.isInteger(index)||index<0||index>=results.length){setStatus("Numéro invalide. Réessaie.",true);return;}
-      chosen=results[index];
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#211638">
+  <title>Météo des petites créatures</title>
+  <style>
+    * {
+      box-sizing: border-box;
     }
-    selectedDay=0;
-    await loadWeather({
-      name:[chosen.name,chosen.admin1,chosen.country].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).join(", "),
-      latitude:chosen.latitude,longitude:chosen.longitude,timezone:chosen.timezone||"auto"
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #211638;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+    }
+    .app {
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+    }
+    h1 {
+      color: #e4c9ff;
+      font-size: 27px;
+    }
+    .panel {
+      padding: 24px;
+      border: 2px solid #8f64c9;
+      border-radius: 20px;
+      background: #302148;
+      box-shadow: 0 8px 30px #10091c80;
+    }
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #a889d5;
+      border-radius: 12px;
+      background: #f8f2ff;
+      color: #211638;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 14px;
+      border: 0;
+      border-radius: 12px;
+      background: #a66bea;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .hidden {
+      display: none !important;
+    }
+    #loveScreen {
+      padding: 30px 18px;
+      animation: appear 0.8s ease;
+    }
+    .love-title {
+      font-size: clamp(30px, 8vw, 46px);
+      line-height: 1.2;
+      color: #f4dcff;
+      text-shadow: 0 0 18px #bd75ff;
+    }
+    .heart {
+      margin: 24px 0;
+      color: #c084fc;
+      font-size: clamp(110px, 35vw, 180px);
+      line-height: 1;
+      text-shadow:
+        0 0 15px #c084fc,
+        0 0 40px #9333ea,
+        0 0 70px #7e22ce;
+      animation: heartbeat 1.2s infinite;
+    }
+    .love-text {
+      font-size: 20px;
+      color: #ead7ff;
+      line-height: 1.6;
+    }
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      15% { transform: scale(1.12); }
+      30% { transform: scale(1); }
+      45% { transform: scale(1.08); }
+    }
+    @keyframes appear {
+      from {
+        opacity: 0;
+        transform: scale(0.85);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    .weather-placeholder {
+      margin-top: 22px;
+      color: #d9c8ed;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="weatherScreen">
+      <h1>🌙 Météo des petites créatures</h1>
+      <div class="panel">
+        <p>🔎 Recherche une ville</p>
+        <form id="searchForm">
+          <input
+            id="cityInput"
+            type="text"
+            placeholder="Nom de la ville..."
+            autocomplete="off"
+            aria-label="Nom de la ville"
+          >
+          <button type="submit">🔍 Chercher</button>
+        </form>
+        <div id="weatherResult" class="weather-placeholder">
+          Entre une ville pour commencer ton aventure météo. ✨
+        </div>
+      </div>
+    </section>
+    <section id="loveScreen" class="panel hidden" aria-live="polite">
+      <div class="love-title">Je t’aime<br>ma princesse</div>
+      <div class="heart" aria-label="Gros cœur violet">💜</div>
+      <p class="love-text">
+        Tu es précieuse pour moi. 💕<br>
+        Plein de bisous rien que pour toi.
+      </p>
+      <button id="backButton" type="button">
+        🌙 Retour à la météo
+      </button>
+    </section>
+  </main>
+  <script>
+    const searchForm = document.getElementById("searchForm");
+    const cityInput = document.getElementById("cityInput");
+    const weatherScreen = document.getElementById("weatherScreen");
+    const loveScreen = document.getElementById("loveScreen");
+    const weatherResult = document.getElementById("weatherResult");
+    const backButton = document.getElementById("backButton");
+    function normalizeSecret(value) {
+      return value
+        .toLocaleLowerCase("fr-FR")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, "");
+    }
+    function showLoveMessage() {
+      weatherScreen.classList.add("hidden");
+      loveScreen.classList.remove("hidden");
+    }
+    function showWeatherScreen() {
+      loveScreen.classList.add("hidden");
+      weatherScreen.classList.remove("hidden");
+      cityInput.value = "";
+      weatherResult.textContent =
+        "Entre une ville pour commencer ton aventure météo. ✨";
+    }
+    searchForm.addEventListener("submit", function(event) {
+      event.preventDefault();
+      const typed = cityInput.value;
+      if (normalizeSecret(typed) === "jetaimemonchaton") {
+        showLoveMessage();
+        return;
+      }
+      const city = typed.trim();
+      if (!city) {
+        weatherResult.textContent = "Écris le nom d’une ville ! 🌷";
+        return;
+      }
+      weatherResult.textContent =
+        "Tu as recherché : " + city +
+        ". La météo doit être connectée à un service météo pour afficher les conditions réelles.";
     });
-  } catch(error) { setStatus(error.message||"Impossible de trouver cette ville.",true); }
-});
-
-$("gpsButton").addEventListener("click",()=>{
-  if(!navigator.geolocation){setStatus("La géolocalisation n'est pas disponible.",true);return;}
-  setStatus("Recherche de ta position...");$("gpsButton").disabled=true;
-  navigator.geolocation.getCurrentPosition(async pos=>{
-    const latitude=pos.coords.latitude,longitude=pos.coords.longitude;
-    const name=await reverseGeocode(latitude,longitude);
-    selectedDay=0;
-    await loadWeather({name,latitude,longitude,timezone:"auto"});
-  },error=>{
-    const messages={
-      1:"Autorise la localisation dans les réglages du navigateur, puis réessaie.",
-      2:"Position introuvable. Vérifie le GPS et réessaie.",
-      3:"La recherche a pris trop de temps. Réessaie."
-    };
-    setStatus(messages[error.code]||"Impossible d'obtenir ta position.",true);
-    $("gpsButton").disabled=false;
-  },{enableHighAccuracy:true,timeout:15000,maximumAge:300000});
-});
-
-if("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
-}
-const cached=readCache();
-if(cached) {
-  currentLocation=cached.location;locationTimezone=cached.timezone||"auto";forecast=cached.forecast;
-  renderWeather();
-  setStatus(`Dernières données enregistrées pour ${currentLocation.name}. Actualisation...`);
-  loadWeather({name:currentLocation.name,latitude:currentLocation.latitude,longitude:currentLocation.longitude,timezone:locationTimezone});
-} else {
-  loadWeather({name:"Paris",latitude:48.8566,longitude:2.3522,timezone:"Europe/Paris"});
-}
-})();
-</script>
+    backButton.addEventListener("click", showWeatherScreen);
+  </script>
 </body>
 </html>
